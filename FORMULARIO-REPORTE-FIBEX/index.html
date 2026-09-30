@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REPORTE FTTH - FIBEX TELECOM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="container">
+    <div class="header">
+      <img src="fibex-logo.png" alt="FIBEX TELECOM LOGO" class="brand-logo">
+      <h2>REPORTE DE CONSTRUCCIÓN FTTH</h2>
+      <p>GENERADOR DE REPORTES DE CAMPO PARA TELEGRAM</p>
+    </div>
+
+    <form id="ftthForm">
+      <!-- 1. Sede y Cuadrilla -->
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label for="sede">SEDE / PROYECTO</label>
+          <input type="text" id="sede" name="sede" value="FIBEX ARAURE" placeholder="EJ. FIBEX ARAURE">
+        </div>
+
+        <div class="form-group flex-1">
+          <label for="cuadrilla">CUADRILLA</label>
+          <input type="text" id="cuadrilla" name="cuadrilla" placeholder="EJ. JESUS / CUADRILLA 01">
+        </div>
+      </div>
+
+      <!-- 2. Fecha y Tipo de Trabajo -->
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label for="fecha">FECHA / HORA</label>
+          <input type="datetime-local" id="fecha" name="fecha">
+        </div>
+
+        <div class="form-group flex-1">
+          <label for="tipo_trabajo">TIPO DE TRABAJO</label>
+          <select id="tipo_trabajo" name="tipo_trabajo">
+            <option value="INSTALACIÓN CAJA NAP">INSTALACIÓN CAJA NAP</option>
+            <option value="INSTALACIÓN MANGA HUB">INSTALACIÓN MANGA HUB</option>
+            <option value="TENDIDO TAP PRECONECTORIZADO">TENDIDO TAP PRECONECTORIZADO</option>
+            <option value="FUSIÓN / ADECUACIÓN">FUSIÓN / ADECUACIÓN</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 3. Elementos de Red: MH y NAP -->
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label for="mh">MANGA (MH)</label>
+          <input type="text" id="mh" name="mh" placeholder="EJ. MH-223">
+        </div>
+
+        <div class="form-group flex-1">
+          <label for="nap_nombre">NAP</label>
+          <input type="text" id="nap_nombre" name="nap_nombre" placeholder="EJ. NAP AB-706">
+        </div>
+      </div>
+
+      <!-- 4. TAG # y Zona / Sector -->
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label for="tag_num">TAG #</label>
+          <input type="text" id="tag_num" name="tag_num" placeholder="EJ. 80">
+        </div>
+
+        <div class="form-group flex-2">
+          <label for="zona">ZONA / SECTOR</label>
+          <input type="text" id="zona" name="zona" placeholder="EJ. ARAURE LA TAPA">
+        </div>
+      </div>
+
+      <!-- 5. Recorrido y Materiales -->
+      <div class="card-section">
+        <h3 class="section-title">📦 RECORRIDO E INSUMOS / MATERIALES</h3>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="postes">POSTES TRANSITADOS</label>
+            <input type="number" id="postes" name="postes" min="0" placeholder="EJ. 2">
+          </div>
+
+          <div class="form-group flex-1">
+            <label for="fleje">FLEJES</label>
+            <input type="number" id="fleje" name="fleje" min="0" placeholder="EJ. 2">
+          </div>
+
+          <div class="form-group flex-1">
+            <label for="hebilla">HEBILLAS</label>
+            <input type="number" id="hebilla" name="hebilla" min="0" placeholder="EJ. 2">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="anilla">ANILLAS SUSPENSIÓN</label>
+            <input type="number" id="anilla" name="anilla" min="0" placeholder="EJ. 2">
+          </div>
+
+          <div class="form-group flex-1">
+            <label for="preformados">PREFORMADOS</label>
+            <input type="number" id="preformados" name="preformados" min="0" placeholder="EJ. 2">
+          </div>
+
+          <div class="form-group flex-1">
+            <label for="preformados_bigote">PREFORMADOS BIGOTE</label>
+            <input type="number" id="preformados_bigote" name="preformados_bigote" min="0" placeholder="EJ. 0">
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. Lectura de Potencia -->
+      <div class="form-group">
+        <label for="potencia">LECTURA DE POTENCIA (DBM)</label>
+        <input type="number" step="0.01" id="potencia" name="potencia" placeholder="EJ. -19.5">
+        <span class="hint-text">RANGO ÓPTIMO PARA ABONADO/NAP: -15.00 A -25.00 DBM.</span>
+      </div>
+
+      <!-- 7. Observaciones -->
+      <div class="form-group">
+        <label for="nota">NOTAS / OBSERVACIONES</label>
+        <textarea id="nota" name="nota" rows="2" placeholder="EJ. POSTE MAL COLOCADO..."></textarea>
+      </div>
+
+      <!-- Vista previa del Reporte Telegram -->
+      <div class="preview-box">
+        <div class="preview-header">
+          <span>📋 REPORTE PARA TELEGRAM</span>
+          <button type="button" id="btnCopy" class="btn-copy" onclick="copiarReporte()">📋 COPIAR TEXTO</button>
+        </div>
+        <textarea id="reporteOutput" readonly rows="14"></textarea>
+      </div>
+
+      <div class="button-group">
+        <button type="submit" id="btnSubmit" class="btn-submit">🚀 ENVIAR REPORTE</button>
+      </div>
+    </form>
+
+    <div id="statusMsg" class="status-msg"></div>
+  </div>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyZr32Rwdn5f-ePOeNHOJKlDaGinxD1KEVFGlzj8FcC_lrq2KK6dbD1ttjgQBxfVjblEQ/exec";
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const ahora = new Date();
+      ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
+      document.getElementById("fecha").value = ahora.toISOString().slice(0, 16);
+
+      generarReporteTextual();
+    });
+
+    const formInputs = document.querySelectorAll("#ftthForm input, #ftthForm select, #ftthForm textarea");
+    formInputs.forEach(input => {
+      input.addEventListener("input", generarReporteTextual);
+      input.addEventListener("change", generarReporteTextual);
+    });
+
+    function formatearFechaHora(strIso) {
+      if (!strIso) return "";
+      const partes = strIso.split("T");
+      if (partes.length === 2) {
+        const f = partes[0].split("-");
+        const fecha = `${f[0]}-${f[1]}-${f[2]}`;
+        return `${fecha} ${partes[1]}`;
+      }
+      return strIso;
+    }
+
+    function generarReporteTextual() {
+      const sede = (document.getElementById("sede").value || "").trim().toUpperCase();
+      const cuadrilla = (document.getElementById("cuadrilla").value || "").trim().toUpperCase();
+      const fechaHora = formatearFechaHora(document.getElementById("fecha").value);
+      const tipoTrabajo = (document.getElementById("tipo_trabajo").value || "").toUpperCase();
+      const mh = (document.getElementById("mh").value || "").trim().toUpperCase();
+      const napNombre = (document.getElementById("nap_nombre").value || "").trim().toUpperCase();
+      const tagNum = (document.getElementById("tag_num").value || "").trim().toUpperCase();
+      const zona = (document.getElementById("zona").value || "").trim().toUpperCase();
+
+      const postes = (document.getElementById("postes").value || "0").trim();
+      const fleje = (document.getElementById("fleje").value || "0").trim();
+      const hebilla = (document.getElementById("hebilla").value || "0").trim();
+      const anilla = (document.getElementById("anilla").value || "0").trim();
+      const preformados = (document.getElementById("preformados").value || "0").trim();
+      const preformadosBigote = (document.getElementById("preformados_bigote").value || "0").trim();
+
+      const potencia = (document.getElementById("potencia").value || "").trim();
+      const nota = (document.getElementById("nota").value || "").trim().toUpperCase() || "SIN OBSERVACIONES";
+
+      let textoNapTag = `🏷️ NAP: ${napNombre}`;
+      if (tagNum) {
+        textoNapTag += `\n🔖 TAG: ${tagNum}`;
+      }
+
+      let textoPotencia = "";
+      if (potencia) {
+        textoPotencia = `\n📶 LECTURA DE POTENCIA: ${potencia} DBM`;
+      }
+
+      const textoReporte =
+        `📋 REPORTE DE CONSTRUCCIÓN
+🏢 ${sede}
+──────────────────────────────
+👷‍♂️ CUADRILLA: ${cuadrilla}
+📅 FECHA/HORA: ${fechaHora}
+🛠 TIPO DE TRABAJO: ${tipoTrabajo}
+🔌 MANGA (MH): ${mh}
+${textoNapTag}
+📍 ZONA/SECTOR: ${zona}
+
+📦 MATERIAL UTILIZADO / INSUMOS:
+🪜 POSTES TRANSITADOS: ${postes}
+⛓️ FLEJES: ${fleje}
+🔲 HEBILLAS: ${hebilla}
+⭕ ANILLAS DE SUSPENSIÓN: ${anilla}
+🌀 PREFORMADOS: ${preformados}
+〰️ PREFORMADOS TIPO BIGOTE: ${preformadosBigote}${textoPotencia}
+
+📝 NOTAS/OBSERVACIONES:
+${nota}`;
+
+      document.getElementById("reporteOutput").value = textoReporte;
+    }
+
+    function copiarReporte() {
+      const textarea = document.getElementById("reporteOutput");
+      textarea.select();
+      textarea.setSelectionRange(0, 99999);
+
+      navigator.clipboard.writeText(textarea.value).then(() => {
+        const btnCopy = document.getElementById("btnCopy");
+        const originalText = btnCopy.innerHTML;
+        btnCopy.innerHTML = "✅ ¡COPIADO!";
+        btnCopy.classList.add("copied");
+        setTimeout(() => {
+          btnCopy.innerHTML = originalText;
+          btnCopy.classList.remove("copied");
+        }, 2000);
+      }).catch(() => {
+        alert("ERROR AL COPIAR EL TEXTO.");
+      });
+    }
+
+    document.getElementById("ftthForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const btn = document.getElementById("btnSubmit");
+      const status = document.getElementById("statusMsg");
+
+      btn.disabled = true;
+      btn.textContent = "⏳ ENVIANDO...";
+      status.style.display = "none";
+
+      const payload = {
+        sede: document.getElementById("sede").value.toUpperCase(),
+        cuadrilla: document.getElementById("cuadrilla").value.toUpperCase(),
+        fecha: document.getElementById("fecha").value,
+        tipo_trabajo: document.getElementById("tipo_trabajo").value.toUpperCase(),
+        mh: document.getElementById("mh").value.toUpperCase(),
+        nap_nombre: document.getElementById("nap_nombre").value.toUpperCase(),
+        tag_num: document.getElementById("tag_num").value.toUpperCase(),
+        zona: document.getElementById("zona").value.toUpperCase(),
+        postes: document.getElementById("postes").value,
+        fleje: document.getElementById("fleje").value,
+        hebilla: document.getElementById("hebilla").value,
+        anilla: document.getElementById("anilla").value,
+        preformados: document.getElementById("preformados").value,
+        preformados_bigote: document.getElementById("preformados_bigote").value,
+        potencia: document.getElementById("potencia").value,
+        nota: (document.getElementById("nota").value || "").toUpperCase(),
+        reporte_texto: document.getElementById("reporteOutput").value
+      };
+
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      })
+        .then(() => {
+          status.className = "status-msg status-success";
+          status.textContent = "¡REPORTE ENVIADO EXITOSAMENTE!";
+          status.style.display = "block";
+        })
+        .catch(() => {
+          status.className = "status-msg status-error";
+          status.textContent = "ERROR DE CONEXIÓN. VERIFIQUE SU SEÑAL E INTENTE DE NUEVO.";
+          status.style.display = "block";
+        })
+        .finally(() => {
+          btn.disabled = false;
+          btn.textContent = "🚀 ENVIAR REPORTE";
+        });
+    });
+  </script>
+
+</body>
+
+</html>
