@@ -44,23 +44,37 @@
         <div class="form-group flex-1">
           <label for="tipo_trabajo">TIPO DE TRABAJO</label>
           <select id="tipo_trabajo" name="tipo_trabajo">
-            <option value="INSTALACIÓN CAJA NAP">INSTALACIÓN CAJA NAP</option>
-            <option value="INSTALACIÓN MANGA HUB">INSTALACIÓN MANGA HUB</option>
-            <option value="TENDIDO TAP PRECONECTORIZADO">TENDIDO TAP PRECONECTORIZADO</option>
-            <option value="FUSIÓN / ADECUACIÓN">FUSIÓN / ADECUACIÓN</option>
+            <option value="INSTALACIÓN CAJA NAP" selected>🏷️ INSTALACIÓN CAJA NAP</option>
+            <option value="INSTALACIÓN MANGA HUB">🔌 INSTALACIÓN MANGA HUB</option>
+            <option value="TENDIDO TAP PRECONECTORIZADO">🪢 TENDIDO TAP PRECONECTORIZADO</option>
+            <option value="FUSIÓN / ADECUACIÓN">⚡ FUSIÓN / ADECUACIÓN</option>
+            <option value="MANTENIMIENTO / AVERÍA">🔧 MANTENIMIENTO / AVERÍA</option>
+            <option value="OTRO">🛠️ OTRO TRABAJO (ESPECIFICAR)</option>
           </select>
         </div>
       </div>
 
+      <!-- Campo condicional para especificar otro trabajo -->
+      <div class="form-group" id="grupo_otro_trabajo" style="display: none;">
+        <label for="otro_trabajo_detalle">ESPECIFIQUE EL TRABAJO REALIZADO</label>
+        <input type="text" id="otro_trabajo_detalle" name="otro_trabajo_detalle" placeholder="EJ. REPARACIÓN DE FIBRA / CAMBIO DE HERRAJES">
+      </div>
+
+      <!-- Badge visual de tipo de reporte activo -->
+      <div class="tipo-badge-container">
+        <span style="font-size: 0.78rem; font-weight: 600; color: #6c757d;">CLASIFICACIÓN:</span>
+        <span id="tipoBadge" class="tipo-badge badge-nap">🏷️ CAJA NAP</span>
+      </div>
+
       <!-- 3. Elementos de Red: MH y NAP -->
       <div class="form-row">
-        <div class="form-group flex-1">
-          <label for="mh">MANGA (MH)</label>
+        <div class="form-group flex-1" id="grupo_mh">
+          <label for="mh" id="lbl_mh">MANGA (MH)</label>
           <input type="text" id="mh" name="mh" placeholder="EJ. MH-223">
         </div>
 
-        <div class="form-group flex-1">
-          <label for="nap_nombre">NAP</label>
+        <div class="form-group flex-1" id="grupo_nap">
+          <label for="nap_nombre" id="lbl_nap">NAP</label>
           <input type="text" id="nap_nombre" name="nap_nombre" placeholder="EJ. NAP AB-706">
         </div>
       </div>
@@ -136,10 +150,17 @@
           <span>📋 REPORTE PARA TELEGRAM</span>
           <button type="button" id="btnCopy" class="btn-copy" onclick="copiarReporte()">📋 COPIAR TEXTO</button>
         </div>
-        <textarea id="reporteOutput" readonly rows="14"></textarea>
+        <textarea id="reporteOutput" readonly rows="16"></textarea>
       </div>
 
-      <div class="button-group">
+      <div class="search-tips">
+        <span>💡</span>
+        <div>
+          <strong>Búsqueda fácil en Telegram:</strong> El reporte incluye título distintivo y hashtags como <code>#NAP</code>, <code>#MANGA_HUB</code>, <code>#TENDIDO_TAP</code>, <code>#FUSION</code>, etc. En Telegram puedes presionar el hashtag o escribirlo en la barra de búsqueda para filtrar al instante todos los trabajos de esa clase.
+        </div>
+      </div>
+
+      <div class="button-group" style="margin-top: 16px;">
         <button type="submit" id="btnSubmit" class="btn-submit">🚀 ENVIAR REPORTE</button>
       </div>
     </form>
@@ -155,6 +176,13 @@
       ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
       document.getElementById("fecha").value = ahora.toISOString().slice(0, 16);
 
+      actualizarTipoTrabajoUI();
+      generarReporteTextual();
+    });
+
+    const tipoTrabajoSelect = document.getElementById("tipo_trabajo");
+    tipoTrabajoSelect.addEventListener("change", () => {
+      actualizarTipoTrabajoUI();
       generarReporteTextual();
     });
 
@@ -163,6 +191,39 @@
       input.addEventListener("input", generarReporteTextual);
       input.addEventListener("change", generarReporteTextual);
     });
+
+    function actualizarTipoTrabajoUI() {
+      const val = tipoTrabajoSelect.value;
+      const grupoOtro = document.getElementById("grupo_otro_trabajo");
+      const badge = document.getElementById("tipoBadge");
+
+      if (val === "OTRO") {
+        grupoOtro.style.display = "block";
+      } else {
+        grupoOtro.style.display = "none";
+      }
+
+      badge.className = "tipo-badge";
+      if (val.includes("NAP")) {
+        badge.classList.add("badge-nap");
+        badge.innerHTML = "🏷️ REPORTE: CAJA NAP";
+      } else if (val.includes("MANGA") || val.includes("HUB")) {
+        badge.classList.add("badge-mh");
+        badge.innerHTML = "🔌 REPORTE: MANGA HUB";
+      } else if (val.includes("TAP") || val.includes("TENDIDO")) {
+        badge.classList.add("badge-tap");
+        badge.innerHTML = "🪢 REPORTE: TENDIDO TAP";
+      } else if (val.includes("FUSIÓN") || val.includes("ADECUACIÓN")) {
+        badge.classList.add("badge-fusion");
+        badge.innerHTML = "⚡ REPORTE: FUSIÓN / ADECUACIÓN";
+      } else if (val.includes("MANTENIMIENTO") || val.includes("AVERÍA")) {
+        badge.classList.add("badge-mantenimiento");
+        badge.innerHTML = "🔧 REPORTE: MANTENIMIENTO";
+      } else {
+        badge.classList.add("badge-otro");
+        badge.innerHTML = "🛠️ REPORTE: OTRO TRABAJO";
+      }
+    }
 
     function formatearFechaHora(strIso) {
       if (!strIso) return "";
@@ -175,11 +236,68 @@
       return strIso;
     }
 
+    function sanitizarTag(str) {
+      if (!str) return "";
+      return str.replace(/[^A-Z0-9_]/gi, "_").replace(/_+/g, "_").replace(/^_|_$/g, "").toUpperCase();
+    }
+
+    function generarHashtags(tipoTrabajo, sede, cuadrilla, mh, napNombre, tagNum) {
+      const tags = ["#REPORTE"];
+      const t = tipoTrabajo.toUpperCase();
+
+      if (t.includes("NAP")) {
+        tags.push("#NAP", "#CAJA_NAP");
+      } else if (t.includes("MANGA") || t.includes("HUB")) {
+        tags.push("#MANGA_HUB", "#MANGA", "#MH");
+      } else if (t.includes("TAP") || t.includes("TENDIDO")) {
+        tags.push("#TENDIDO_TAP", "#TAP");
+      } else if (t.includes("FUSI") || t.includes("ADECUA")) {
+        tags.push("#FUSION", "#ADECUACION");
+      } else if (t.includes("MANTEN") || t.includes("AVER")) {
+        tags.push("#MANTENIMIENTO", "#AVERIA");
+      } else {
+        tags.push("#OTRO_TRABAJO");
+      }
+
+      if (mh) {
+        const mhTag = sanitizarTag(mh);
+        if (mhTag) tags.push("#" + mhTag);
+      }
+
+      if (napNombre) {
+        const napTag = sanitizarTag(napNombre);
+        if (napTag) tags.push("#" + napTag);
+      }
+
+      if (tagNum) {
+        const cleanTagNum = sanitizarTag(tagNum);
+        if (cleanTagNum) tags.push("#TAG_" + cleanTagNum);
+      }
+
+      if (cuadrilla) {
+        const cuadTag = sanitizarTag(cuadrilla);
+        if (cuadTag) tags.push("#" + cuadTag);
+      }
+
+      if (sede) {
+        const sedeTag = sanitizarTag(sede);
+        if (sedeTag) tags.push("#" + sedeTag);
+      }
+
+      return tags.join(" ");
+    }
+
     function generarReporteTextual() {
       const sede = (document.getElementById("sede").value || "").trim().toUpperCase();
       const cuadrilla = (document.getElementById("cuadrilla").value || "").trim().toUpperCase();
       const fechaHora = formatearFechaHora(document.getElementById("fecha").value);
-      const tipoTrabajo = (document.getElementById("tipo_trabajo").value || "").toUpperCase();
+      let tipoTrabajo = (document.getElementById("tipo_trabajo").value || "").toUpperCase();
+      
+      const otroDetalle = (document.getElementById("otro_trabajo_detalle").value || "").trim().toUpperCase();
+      if (tipoTrabajo === "OTRO" && otroDetalle) {
+        tipoTrabajo = `OTRO: ${otroDetalle}`;
+      }
+
       const mh = (document.getElementById("mh").value || "").trim().toUpperCase();
       const napNombre = (document.getElementById("nap_nombre").value || "").trim().toUpperCase();
       const tagNum = (document.getElementById("tag_num").value || "").trim().toUpperCase();
@@ -195,26 +313,41 @@
       const potencia = (document.getElementById("potencia").value || "").trim();
       const nota = (document.getElementById("nota").value || "").trim().toUpperCase() || "SIN OBSERVACIONES";
 
-      let textoNapTag = `🏷️ NAP: ${napNombre}`;
-      if (tagNum) {
-        textoNapTag += `\n🔖 TAG: ${tagNum}`;
+      let iconoTipo = "📋";
+      if (tipoTrabajo.includes("NAP")) iconoTipo = "🏷️";
+      else if (tipoTrabajo.includes("MANGA") || tipoTrabajo.includes("HUB")) iconoTipo = "🔌";
+      else if (tipoTrabajo.includes("TAP") || tipoTrabajo.includes("TENDIDO")) iconoTipo = "🪢";
+      else if (tipoTrabajo.includes("FUSI") || tipoTrabajo.includes("ADECUA")) iconoTipo = "⚡";
+      else if (tipoTrabajo.includes("MANTEN") || tipoTrabajo.includes("AVER")) iconoTipo = "🔧";
+      else iconoTipo = "🛠️";
+
+      let lineasElementos = [];
+      if (mh) {
+        lineasElementos.push(`🔌 MANGA (MH): ${mh}`);
       }
+      if (napNombre) {
+        lineasElementos.push(`🏷️ NAP: ${napNombre}`);
+      }
+      if (tagNum) {
+        lineasElementos.push(`🔖 TAG: ${tagNum}`);
+      }
+      const elementosRedTexto = lineasElementos.length > 0 ? lineasElementos.join("\n") + "\n" : "";
 
       let textoPotencia = "";
       if (potencia) {
         textoPotencia = `\n📶 LECTURA DE POTENCIA: ${potencia} DBM`;
       }
 
+      const hashtags = generarHashtags(tipoTrabajo, sede, cuadrilla, mh, napNombre, tagNum);
+
       const textoReporte =
-        `📋 REPORTE DE CONSTRUCCIÓN
+`📋 [REPORTE FTTH: ${tipoTrabajo}] ${iconoTipo}
 🏢 ${sede}
 ──────────────────────────────
+📌 CLASIFICACIÓN: ${tipoTrabajo}
 👷‍♂️ CUADRILLA: ${cuadrilla}
 📅 FECHA/HORA: ${fechaHora}
-🛠 TIPO DE TRABAJO: ${tipoTrabajo}
-🔌 MANGA (MH): ${mh}
-${textoNapTag}
-📍 ZONA/SECTOR: ${zona}
+${elementosRedTexto}📍 ZONA/SECTOR: ${zona}
 
 📦 MATERIAL UTILIZADO / INSUMOS:
 🪜 POSTES TRANSITADOS: ${postes}
@@ -225,7 +358,10 @@ ${textoNapTag}
 〰️ PREFORMADOS TIPO BIGOTE: ${preformadosBigote}${textoPotencia}
 
 📝 NOTAS/OBSERVACIONES:
-${nota}`;
+${nota}
+──────────────────────────────
+🔍 BÚSQUEDA / FILTROS:
+${hashtags}`;
 
       document.getElementById("reporteOutput").value = textoReporte;
     }
@@ -259,11 +395,15 @@ ${nota}`;
       btn.textContent = "⏳ ENVIANDO...";
       status.style.display = "none";
 
+      const tipoTrabajoVal = document.getElementById("tipo_trabajo").value.toUpperCase();
+      const otroDetalle = (document.getElementById("otro_trabajo_detalle").value || "").trim().toUpperCase();
+
       const payload = {
         sede: document.getElementById("sede").value.toUpperCase(),
         cuadrilla: document.getElementById("cuadrilla").value.toUpperCase(),
         fecha: document.getElementById("fecha").value,
-        tipo_trabajo: document.getElementById("tipo_trabajo").value.toUpperCase(),
+        tipo_trabajo: tipoTrabajoVal,
+        otro_trabajo_detalle: otroDetalle,
         mh: document.getElementById("mh").value.toUpperCase(),
         nap_nombre: document.getElementById("nap_nombre").value.toUpperCase(),
         tag_num: document.getElementById("tag_num").value.toUpperCase(),

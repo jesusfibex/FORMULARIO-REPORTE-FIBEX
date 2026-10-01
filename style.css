@@ -200,64 +200,88 @@ textarea:focus {
     cursor: not-allowed;
 }
 
-/* Clases dinámicas de validación de input */
-.input-error {
-    border-color: #dc3545 !important;
-    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.2) !important;
+/* Badges de Tipo de Reporte */
+.tipo-badge-container {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.input-warning {
-    border-color: #ffc107 !important;
-    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.25) !important;
-}
-
-.input-success {
-    border-color: #28a745 !important;
-    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.2) !important;
-}
-
-.hint-text {
-    display: block;
-    margin-top: 4px;
-    font-size: 0.78rem;
-    color: #6c757d;
-}
-
-.alert-message {
-    display: none;
-    margin-top: 6px;
+.tipo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
     font-size: 0.82rem;
-    font-weight: 600;
-    padding: 6px 10px;
-    border-radius: 6px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: all 0.25s ease;
 }
 
-.alert-info {
-    display: block;
-    background-color: #e7f1ff;
-    color: #084298;
+.badge-nap {
+    background-color: #e8f4fd;
+    color: #0056b3;
+    border: 1px solid #b8daff;
 }
 
-.alert-warning {
-    display: block;
+.badge-mh {
     background-color: #fff3cd;
-    color: #664d03;
-    border: 1px solid #ffe69c;
+    color: #856404;
+    border: 1px solid #ffeeba;
 }
 
-.alert-danger {
-    display: block;
+.badge-tap {
+    background-color: #e0f8ff;
+    color: #007791;
+    border: 1px solid #b2ebf2;
+}
+
+.badge-fusion {
+    background-color: #d1e7dd;
+    color: #0f5132;
+    border: 1px solid #badbcc;
+}
+
+.badge-mantenimiento {
     background-color: #f8d7da;
     color: #842029;
     border: 1px solid #f5c2c7;
 }
 
-.alert-success {
-    display: block;
-    background-color: #d1e7dd;
-    color: #0f5132;
-    border: 1px solid #badbcc;
+.badge-otro {
+    background-color: #e2e3e5;
+    color: #383d41;
+    border: 1px solid #d6d8db;
 }
+
+.search-tips {
+    background: #f0f7ff;
+    border: 1px solid #cce5ff;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-top: 12px;
+    font-size: 0.8rem;
+    color: #004085;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.search-tips strong {
+    color: #002752;
+}
+
+.search-tips code {
+    background: #e1effe;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-weight: 600;
+    color: #0056b3;
+}
+
 
 
 /* Responsividad y optimización Móvil (Smartphones / Telegram WebApp) */
