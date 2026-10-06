@@ -6,6 +6,7 @@
 var BOT_TOKEN = PropertiesService.getScriptProperties().getProperty("BOT_TOKEN") || "8832826558:AAG4dReMmGKxCq6WSGWCvReyM9Dzleq8WtU";
 var CHAT_ID = "-1004385586958";
 var TOPIC_ID = 3;
+var DRIVE_FOLDER_ID = "17jT5nBfdPUEsJoNQ3scYY9KqUTx6MTtg";
 
 function doGet(e) {
   return ContentService.createTextOutput("Servidor FTTH OBI GROUP activo.");
@@ -259,14 +260,25 @@ function sendTelegramPhotos(imagenes, replyId) {
 }
 
 function guardarEnGoogleDrive(data) {
-  var nombreCarpetaRaiz = "REPORTES FTTH FIBEX";
-  var parentFolders = DriveApp.getFoldersByName(nombreCarpetaRaiz);
   var rootFolder;
 
-  if (parentFolders.hasNext()) {
-    rootFolder = parentFolders.next();
-  } else {
-    rootFolder = DriveApp.createFolder(nombreCarpetaRaiz);
+  try {
+    if (DRIVE_FOLDER_ID && DRIVE_FOLDER_ID.trim() !== "") {
+      rootFolder = DriveApp.getFolderById(DRIVE_FOLDER_ID.trim());
+    }
+  } catch (errDrive) {
+    Logger.log("Error buscando carpeta por ID: " + errDrive.toString());
+  }
+
+  // Fallback a buscar o crear carpeta por nombre si falla el ID
+  if (!rootFolder) {
+    var nombreCarpetaRaiz = "REPORTES FTTH FIBEX";
+    var parentFolders = DriveApp.getFoldersByName(nombreCarpetaRaiz);
+    if (parentFolders.hasNext()) {
+      rootFolder = parentFolders.next();
+    } else {
+      rootFolder = DriveApp.createFolder(nombreCarpetaRaiz);
+    }
   }
 
   // TÍTULO DE LA CARPETA SEGÚN REQUERIMIENTO: "ZONA - MH - NAP"
