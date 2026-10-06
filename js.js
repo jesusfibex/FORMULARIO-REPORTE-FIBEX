@@ -21,12 +21,7 @@ function doPost(e) {
       return createJsonResponse({ success: false, error: "JSON inválido." });
     }
 
-    // FILTRO DE SEGURIDAD: validar que sea un envío del formulario real
-    if (data.update_id || data.message || !data.cuadrilla || !data.tipo_trabajo) {
-      return createJsonResponse({ success: false, error: "Petición ignorada: no es un envío válido del formulario." });
-    }
-
-    // Guardar fotos en Google Drive (si hay imágenes)
+    // Guardar fotos en Google Drive en background (el navegador envía las fotos a Telegram directamente)
     var driveFolderUrl = "";
     if (data.imagenes && data.imagenes.length > 0) {
       try {
@@ -37,26 +32,17 @@ function doPost(e) {
       }
     }
 
-    var texto = buildMessage(data);
-    var respuestaTelegram = sendTelegramMessage(texto);
+    // Enviar solo el texto del reporte a Telegram
+    sendTelegramMessage(buildMessage(data));
 
-    try {
-      var jsonResp = JSON.parse(respuestaTelegram);
-      if (jsonResp.ok && data.imagenes && data.imagenes.length > 0) {
-        var replyId = jsonResp.result.message_id;
-        sendTelegramPhotos(data.imagenes, replyId);
-      }
-    } catch (eFoto) {
-      Logger.log("Error enviando imágenes: " + eFoto.toString());
-    }
-
-    return createJsonResponse({ success: true, telegramResponse: JSON.parse(respuestaTelegram), driveUrl: driveFolderUrl });
+    return createJsonResponse({ success: true, driveUrl: driveFolderUrl });
 
   } catch (err) {
     Logger.log("Error en doPost: " + err.toString());
     return createJsonResponse({ success: false, error: err.toString() });
   }
 }
+
 
 function createJsonResponse(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
