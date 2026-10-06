@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 
 <body>
@@ -57,7 +58,8 @@
       <!-- Campo condicional para especificar otro trabajo -->
       <div class="form-group" id="grupo_otro_trabajo" style="display: none;">
         <label for="otro_trabajo_detalle">ESPECIFIQUE EL TRABAJO REALIZADO</label>
-        <input type="text" id="otro_trabajo_detalle" name="otro_trabajo_detalle" placeholder="EJ. REPARACIÓN DE FIBRA / CAMBIO DE HERRAJES">
+        <input type="text" id="otro_trabajo_detalle" name="otro_trabajo_detalle"
+          placeholder="EJ. REPARACIÓN DE FIBRA / CAMBIO DE HERRAJES">
       </div>
 
       <!-- Badge visual de tipo de reporte activo -->
@@ -92,41 +94,75 @@
         </div>
       </div>
 
+      <!-- GPS Location Widget -->
+      <div class="form-group gps-card">
+        <label>📍 UBICACIÓN EN CAMPO (GPS)</label>
+        <div class="gps-container">
+          <button type="button" id="btnGps" class="btn-gps" onclick="obtenerUbicacionGPS()">📍 CAPTURAR GPS</button>
+          <input type="hidden" id="gps_url" name="gps_url">
+          <span id="gpsStatus" class="gps-status">Sin ubicación capturada</span>
+        </div>
+      </div>
+
       <!-- 5. Recorrido y Materiales -->
       <div class="card-section">
         <h3 class="section-title">📦 RECORRIDO E INSUMOS / MATERIALES</h3>
 
         <div class="form-row">
           <div class="form-group flex-1">
-            <label for="postes">POSTES TRANSITADOS</label>
-            <input type="number" id="postes" name="postes" min="0" placeholder="EJ. 2">
+            <label for="postes">POSTES</label>
+            <div class="stepper-wrapper">
+              <button type="button" class="btn-stepper" onclick="modificarCantidad('postes', -1)">-</button>
+              <input type="number" id="postes" name="postes" min="0" value="0">
+              <button type="button" class="btn-stepper" onclick="modificarCantidad('postes', 1)">+</button>
+            </div>
           </div>
 
           <div class="form-group flex-1">
             <label for="fleje">FLEJES</label>
-            <input type="number" id="fleje" name="fleje" min="0" placeholder="EJ. 2">
+            <div class="stepper-wrapper">
+              <button type="button" class="btn-stepper" onclick="modificarCantidad('fleje', -1)">-</button>
+              <input type="number" id="fleje" name="fleje" min="0" value="0">
+              <button type="button" class="btn-stepper" onclick="modificarCantidad('fleje', 1)">+</button>
+            </div>
           </div>
 
           <div class="form-group flex-1">
             <label for="hebilla">HEBILLAS</label>
-            <input type="number" id="hebilla" name="hebilla" min="0" placeholder="EJ. 2">
+            <div class="stepper-wrapper">
+              <button type="button" class="btn-stepper" onclick="modificarCantidad('hebilla', -1)">-</button>
+              <input type="number" id="hebilla" name="hebilla" min="0" value="0">
+              <button type="button" class="btn-stepper" onclick="modificarCantidad('hebilla', 1)">+</button>
+            </div>
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group flex-1">
-            <label for="anilla">ANILLAS SUSPENSIÓN</label>
-            <input type="number" id="anilla" name="anilla" min="0" placeholder="EJ. 2">
+            <label for="anilla">ANILLAS</label>
+            <div class="stepper-wrapper">
+              <button type="button" class="btn-stepper" onclick="modificarCantidad('anilla', -1)">-</button>
+              <input type="number" id="anilla" name="anilla" min="0" value="0">
+              <button type="button" class="btn-stepper" onclick="modificarCantidad('anilla', 1)">+</button>
+            </div>
           </div>
 
           <div class="form-group flex-1">
             <label for="preformados">PREFORMADOS</label>
-            <input type="number" id="preformados" name="preformados" min="0" placeholder="EJ. 2">
+            <div class="stepper-wrapper">
+              <button type="button" class="btn-stepper" onclick="modificarCantidad('preformados', -1)">-</button>
+              <input type="number" id="preformados" name="preformados" min="0" value="0">
+              <button type="button" class="btn-stepper" onclick="modificarCantidad('preformados', 1)">+</button>
+            </div>
           </div>
 
           <div class="form-group flex-1">
-            <label for="preformados_bigote">PREFORMADOS BIGOTE</label>
-            <input type="number" id="preformados_bigote" name="preformados_bigote" min="0" placeholder="EJ. 0">
+            <label for="preformados_bigote">BIGOTES</label>
+            <div class="stepper-wrapper">
+              <button type="button" class="btn-stepper" onclick="modificarCantidad('preformados_bigote', -1)">-</button>
+              <input type="number" id="preformados_bigote" name="preformados_bigote" min="0" value="0">
+              <button type="button" class="btn-stepper" onclick="modificarCantidad('preformados_bigote', 1)">+</button>
+            </div>
           </div>
         </div>
       </div>
@@ -156,7 +192,10 @@
       <div class="search-tips">
         <span>💡</span>
         <div>
-          <strong>Búsqueda fácil en Telegram:</strong> El reporte incluye título distintivo y hashtags como <code>#NAP</code>, <code>#MANGA_HUB</code>, <code>#TENDIDO_TAP</code>, <code>#FUSION</code>, etc. En Telegram puedes presionar el hashtag o escribirlo en la barra de búsqueda para filtrar al instante todos los trabajos de esa clase.
+          <strong>Búsqueda fácil en Telegram:</strong> El reporte incluye título distintivo y hashtags como
+          <code>#NAP</code>, <code>#MANGA_HUB</code>, <code>#TENDIDO_TAP</code>, <code>#FUSION</code>, etc. En Telegram
+          puedes presionar el hashtag o escribirlo en la barra de búsqueda para filtrar al instante todos los trabajos
+          de esa clase.
         </div>
       </div>
 
@@ -171,10 +210,20 @@
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyZr32Rwdn5f-ePOeNHOJKlDaGinxD1KEVFGlzj8FcC_lrq2KK6dbD1ttjgQBxfVjblEQ/exec";
 
+    // Telegram WebApp Integration
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+    }
+
     window.addEventListener("DOMContentLoaded", () => {
+      // Set current date/time
       const ahora = new Date();
       ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
       document.getElementById("fecha").value = ahora.toISOString().slice(0, 16);
+
+      // Cargar datos guardados previamente de LocalStorage (Sede, Cuadrilla, Zona)
+      restaurarDatosGuardados();
 
       actualizarTipoTrabajoUI();
       generarReporteTextual();
@@ -188,19 +237,108 @@
 
     const formInputs = document.querySelectorAll("#ftthForm input, #ftthForm select, #ftthForm textarea");
     formInputs.forEach(input => {
-      input.addEventListener("input", generarReporteTextual);
-      input.addEventListener("change", generarReporteTextual);
+      input.addEventListener("input", () => {
+        guardarDatosRecurrentes();
+        generarReporteTextual();
+      });
+      input.addEventListener("change", () => {
+        guardarDatosRecurrentes();
+        generarReporteTextual();
+      });
     });
+
+    function guardarDatosRecurrentes() {
+      try {
+        const sede = document.getElementById("sede").value;
+        const cuadrilla = document.getElementById("cuadrilla").value;
+        const zona = document.getElementById("zona").value;
+
+        if (sede) localStorage.setItem("fibex_sede", sede);
+        if (cuadrilla) localStorage.setItem("fibex_cuadrilla", cuadrilla);
+        if (zona) localStorage.setItem("fibex_zona", zona);
+      } catch (e) {
+        console.warn("LocalStorage no disponible:", e);
+      }
+    }
+
+    function restaurarDatosGuardados() {
+      try {
+        const sedeGuardada = localStorage.getItem("fibex_sede");
+        const cuadrillaGuardada = localStorage.getItem("fibex_cuadrilla");
+        const zonaGuardada = localStorage.getItem("fibex_zona");
+
+        if (sedeGuardada) document.getElementById("sede").value = sedeGuardada;
+        if (cuadrillaGuardada) document.getElementById("cuadrilla").value = cuadrillaGuardada;
+        if (zonaGuardada) document.getElementById("zona").value = zonaGuardada;
+      } catch (e) {
+        console.warn("Error al restaurar LocalStorage:", e);
+      }
+    }
+
+    function modificarCantidad(inputId, delta) {
+      const el = document.getElementById(inputId);
+      let val = parseInt(el.value || "0", 10);
+      if (isNaN(val)) val = 0;
+      val = Math.max(0, val + delta);
+      el.value = val;
+      generarReporteTextual();
+    }
+
+    function obtenerUbicacionGPS() {
+      const status = document.getElementById("gpsStatus");
+      const btn = document.getElementById("btnGps");
+
+      if (!navigator.geolocation) {
+        status.textContent = "❌ GPS no soportado en este dispositivo.";
+        return;
+      }
+
+      btn.disabled = true;
+      status.textContent = "📡 Obteniendo coordenadas GPS...";
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude.toFixed(6);
+          const lng = pos.coords.longitude.toFixed(6);
+          const mapUrl = `https://maps.google.com/?q=${lat},${lng}`;
+
+          document.getElementById("gps_url").value = mapUrl;
+          status.innerHTML = `✅ Ubicación capturada (<a href="${mapUrl}" target="_blank" rel="noopener">Ver mapa</a>)`;
+          btn.disabled = false;
+          generarReporteTextual();
+        },
+        (err) => {
+          console.warn("Error GPS:", err);
+          status.textContent = "⚠️ No se pudo obtener la ubicación GPS (Verifique permisos).";
+          btn.disabled = false;
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
 
     function actualizarTipoTrabajoUI() {
       const val = tipoTrabajoSelect.value;
       const grupoOtro = document.getElementById("grupo_otro_trabajo");
       const badge = document.getElementById("tipoBadge");
+      const grupoMh = document.getElementById("grupo_mh");
+      const grupoNap = document.getElementById("grupo_nap");
 
       if (val === "OTRO") {
         grupoOtro.style.display = "block";
       } else {
         grupoOtro.style.display = "none";
+      }
+
+      // Ocultar/destacar campos según tipo de trabajo
+      if (val.includes("NAP")) {
+        grupoNap.style.opacity = "1";
+        grupoMh.style.opacity = "0.85";
+      } else if (val.includes("MANGA") || val.includes("HUB")) {
+        grupoMh.style.opacity = "1";
+        grupoNap.style.opacity = "0.85";
+      } else {
+        grupoMh.style.opacity = "1";
+        grupoNap.style.opacity = "1";
       }
 
       badge.className = "tipo-badge";
@@ -292,7 +430,7 @@
       const cuadrilla = (document.getElementById("cuadrilla").value || "").trim().toUpperCase();
       const fechaHora = formatearFechaHora(document.getElementById("fecha").value);
       let tipoTrabajo = (document.getElementById("tipo_trabajo").value || "").toUpperCase();
-      
+
       const otroDetalle = (document.getElementById("otro_trabajo_detalle").value || "").trim().toUpperCase();
       if (tipoTrabajo === "OTRO" && otroDetalle) {
         tipoTrabajo = `OTRO: ${otroDetalle}`;
@@ -302,6 +440,7 @@
       const napNombre = (document.getElementById("nap_nombre").value || "").trim().toUpperCase();
       const tagNum = (document.getElementById("tag_num").value || "").trim().toUpperCase();
       const zona = (document.getElementById("zona").value || "").trim().toUpperCase();
+      const gpsUrl = (document.getElementById("gps_url").value || "").trim();
 
       const postes = (document.getElementById("postes").value || "0").trim();
       const fleje = (document.getElementById("fleje").value || "0").trim();
@@ -338,16 +477,21 @@
         textoPotencia = `\n📶 LECTURA DE POTENCIA: ${potencia} DBM`;
       }
 
+      let textoGps = "";
+      if (gpsUrl) {
+        textoGps = `\n📍 UBICACIÓN GPS: ${gpsUrl}`;
+      }
+
       const hashtags = generarHashtags(tipoTrabajo, sede, cuadrilla, mh, napNombre, tagNum);
 
       const textoReporte =
-`📋 [REPORTE FTTH: ${tipoTrabajo}] ${iconoTipo}
+        `📋 [REPORTE FTTH: ${tipoTrabajo}] ${iconoTipo}
 🏢 ${sede}
 ──────────────────────────────
 📌 CLASIFICACIÓN: ${tipoTrabajo}
 👷‍♂️ CUADRILLA: ${cuadrilla}
 📅 FECHA/HORA: ${fechaHora}
-${elementosRedTexto}📍 ZONA/SECTOR: ${zona}
+${elementosRedTexto}📍 ZONA/SECTOR: ${zona}${textoGps}
 
 📦 MATERIAL UTILIZADO / INSUMOS:
 🪜 POSTES TRANSITADOS: ${postes}
@@ -408,6 +552,7 @@ ${hashtags}`;
         nap_nombre: document.getElementById("nap_nombre").value.toUpperCase(),
         tag_num: document.getElementById("tag_num").value.toUpperCase(),
         zona: document.getElementById("zona").value.toUpperCase(),
+        gps_url: document.getElementById("gps_url").value,
         postes: document.getElementById("postes").value,
         fleje: document.getElementById("fleje").value,
         hebilla: document.getElementById("hebilla").value,
@@ -429,6 +574,13 @@ ${hashtags}`;
           status.className = "status-msg status-success";
           status.textContent = "¡REPORTE ENVIADO EXITOSAMENTE!";
           status.style.display = "block";
+
+          // Cierra la WebApp de Telegram si está corriendo dentro de Telegram
+          if (window.Telegram && window.Telegram.WebApp) {
+            setTimeout(() => {
+              window.Telegram.WebApp.close();
+            }, 2000);
+          }
         })
         .catch(() => {
           status.className = "status-msg status-error";

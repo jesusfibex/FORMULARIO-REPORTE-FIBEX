@@ -2,7 +2,8 @@
 //  REPORTE FTTH - OBI GROUP (Backend Google Apps Script)
 // ============================================================
 
-var BOT_TOKEN = "8832826558:AAG4dReMmGKxCq6WSGWCvReyM9Dzleq8WtU";
+// Permite obtener BOT_TOKEN desde Script Properties para mayor seguridad en Apps Script
+var BOT_TOKEN = PropertiesService.getScriptProperties().getProperty("BOT_TOKEN") || "8832826558:AAG4dReMmGKxCq6WSGWCvReyM9Dzleq8WtU";
 var CHAT_ID = "-1004385586958";
 var TOPIC_ID = 3;
 
@@ -118,6 +119,11 @@ function buildMessage(data) {
     potenciaText = "\n📶 *Lectura de Potencia:* " + escapeMarkdown(data.potencia) + " dBm";
   }
 
+  var gpsText = "";
+  if (data.gps_url) {
+    gpsText = "\n📍 *Ubicación GPS:* " + escapeMarkdown(data.gps_url);
+  }
+
   var hashtags = buildHashtags(data, tipoTrabajo);
 
   var msg =
@@ -128,7 +134,7 @@ function buildMessage(data) {
     "👷‍♂️ *Cuadrilla:* " + escapeMarkdown(data.cuadrilla || "N/A") + "\n" +
     "📅 *Fecha/Hora:* " + escapeMarkdown(fechaDisplay) + "\n" +
     elementosRedText +
-    "📍 *Zona/Sector:* " + escapeMarkdown(data.zona || "N/A") + "\n\n" +
+    "📍 *Zona/Sector:* " + escapeMarkdown(data.zona || "N/A") + gpsText + "\n\n" +
     "📦 *Material Utilizado / Insumos:*\n" +
     "🪜 *Postes transitados:* " + escapeMarkdown(data.postes || "0") + "\n" +
     "⛓️ *Flejes:* " + escapeMarkdown(data.fleje || "0") + "\n" +

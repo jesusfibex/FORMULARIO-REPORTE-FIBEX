@@ -355,3 +355,93 @@ textarea:focus {
     color: #721c24;
     border: 1px solid #f5c6cb;
 }
+
+/* Stepper Insumos */
+.stepper-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.stepper-wrapper input[type="number"] {
+    text-align: center;
+    padding: 8px 4px;
+    -moz-appearance: textfield;
+}
+
+.stepper-wrapper input[type="number"]::-webkit-outer-spin-button,
+.stepper-wrapper input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.btn-stepper {
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    color: #495057;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border-radius: 6px;
+    width: 36px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.btn-stepper:active {
+    background-color: #ced4da;
+}
+
+/* Widget GPS */
+.gps-card {
+    background: #eef6ff;
+    border: 1px solid #b6d4fe;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 14px;
+}
+
+.gps-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.btn-gps {
+    background-color: #17a2b8;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-gps:hover {
+    background-color: #138496;
+}
+
+.btn-gps:disabled {
+    background-color: #6c757d;
+    cursor: wait;
+}
+
+.gps-status {
+    font-size: 0.82rem;
+    color: #004085;
+    word-break: break-all;
+}
+
+.gps-status a {
+    color: #0056b3;
+    font-weight: 600;
+    text-decoration: underline;
+}
