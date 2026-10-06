@@ -444,4 +444,85 @@ textarea:focus {
     color: #0056b3;
     font-weight: 600;
     text-decoration: underline;
-}
+}
+
+/* Sección e imágenes de fotos */
+.photo-card {
+    background: #fdfefe;
+    border: 1px dashed #0056b3;
+}
+
+.photo-upload-container {
+    text-align: center;
+    margin-bottom: 12px;
+}
+
+.btn-photo {
+    background-color: #0056b3;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-photo:hover {
+    background-color: #003d82;
+}
+
+.btn-photo:active {
+    transform: scale(0.98);
+}
+
+.photo-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.photo-preview-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #ced4da;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.photo-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.btn-remove-photo {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(220, 53, 69, 0.9);
+    color: white;
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    transition: background 0.15s;
+}
+
+.btn-remove-photo:hover {
+    background: #c82333;
+}

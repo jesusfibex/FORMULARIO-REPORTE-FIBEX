@@ -28,6 +28,17 @@ function doPost(e) {
     var texto = buildMessage(data);
     var respuestaTelegram = sendTelegramMessage(texto);
 
+    // Parsear respuesta para obtener ID del mensaje original y enviar fotos asociadas
+    try {
+      var jsonResp = JSON.parse(respuestaTelegram);
+      if (jsonResp.ok && data.imagenes && data.imagenes.length > 0) {
+        var replyId = jsonResp.result.message_id;
+        sendTelegramPhotos(data.imagenes, replyId);
+      }
+    } catch (eFoto) {
+      Logger.log("Error enviando imágenes: " + eFoto.toString());
+    }
+
     return ContentService.createTextOutput("OK: " + respuestaTelegram);
 
   } catch (err) {
@@ -198,4 +209,35 @@ function sendTelegramMessage(texto) {
   var responseText = response.getContentText();
   Logger.log("Respuesta de Telegram: " + responseText);
   return responseText;
+}
+
+function sendTelegramPhotos(imagenes, replyId) {
+  var url = "https://api.telegram.org/bot" + BOT_TOKEN + "/sendPhoto";
+
+  for (var i = 0; i < imagenes.length; i++) {
+    try {
+      var imgData = imagenes[i];
+      var blob = Utilities.newBlob(Utilities.base64Decode(imgData.base64), imgData.mimeType || "image/jpeg", imgData.name || ("foto_" + (i + 1) + ".jpg"));
+
+      var payload = {
+        chat_id: CHAT_ID,
+        photo: blob,
+        reply_to_message_id: replyId
+      };
+
+      if (TOPIC_ID && TOPIC_ID > 0) {
+        payload.message_thread_id = parseInt(TOPIC_ID);
+      }
+
+      var options = {
+        method: "post",
+        payload: payload,
+        muteHttpExceptions: true
+      };
+
+      UrlFetchApp.fetch(url, options);
+    } catch (e) {
+      Logger.log("Error al enviar foto " + i + ": " + e.toString());
+    }
+  }
 }
