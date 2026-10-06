@@ -53,9 +53,23 @@ El sistema clasifica automáticamente cada reporte y añade hashtags y encabezad
 
 ---
 
+## 📷 Carga de Fotos y Almacenamiento en Google Drive
+
+El sistema permite adjuntar fotos tomadas desde la cámara móvil o seleccionadas desde la galería:
+
+1. **Optimización en Cliente**: Las imágenes se comprimen y redimensionan automáticamente a máximo **1280px** (calidad JPEG 75%) antes de enviarse para ahorrar consumo de datos móviles en el campo.
+2. **Envío a Telegram**: Las fotos se envían adjuntas directamente como respuesta al mensaje del reporte en el canal/topic especificado.
+3. **Organización en Google Drive**: Se crea automáticamente la estructura de carpetas en tu Google Drive:
+   - **Carpeta Raíz**: `REPORTES FTTH FIBEX`
+   - **Subcarpeta Dinámica**: `ZONA - MH - NAP (FECHA)` (ejemplo: `ARAURE LA TAPA - MH-223 - NAP AB-706`)
+4. **Enlace Directo**: El reporte de Telegram incluye un link directo a la carpeta creada en Google Drive para consultar o descargar las fotos originales en cualquier momento.
+
+---
+
 ## Indicador de potencia (dBm)
 
 - `-8 a -25 dBm`: Óptima
 - `-25 a -30 / -3 a -8 dBm`: Marginal
 - `Fuera de rango`: Revisar línea
+
 

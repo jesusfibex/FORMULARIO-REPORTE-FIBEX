@@ -45,7 +45,7 @@
         <div class="form-group flex-1">
           <label for="tipo_trabajo">TIPO DE TRABAJO</label>
           <select id="tipo_trabajo" name="tipo_trabajo">
-            <option value="INSTALACIÓN CAJA NAP" selected>🏷️ INSTALACIÓN CAJA NAP</option>
+            <option value="INSTALACIÓN CAJA NAP">🏷️ INSTALACIÓN CAJA NAP</option>
             <option value="INSTALACIÓN MANGA HUB">🔌 INSTALACIÓN MANGA HUB</option>
             <option value="TENDIDO TAP PRECONECTORIZADO">🪢 TENDIDO TAP PRECONECTORIZADO</option>
             <option value="FUSIÓN / ADECUACIÓN">⚡ FUSIÓN / ADECUACIÓN</option>
@@ -178,11 +178,13 @@
       <div class="card-section photo-card">
         <h3 class="section-title">📷 FOTOS DE LA INSTALACIÓN (OPCIONAL)</h3>
         <div class="photo-upload-container">
-          <input type="file" id="fotoInput" accept="image/*" multiple capture="environment" style="display: none;" onchange="procesarImagenesSeleccionadas(event)">
+          <input type="file" id="fotoInput" accept="image/*" multiple capture="environment" style="display: none;"
+            onchange="procesarImagenesSeleccionadas(event)">
           <button type="button" class="btn-photo" onclick="document.getElementById('fotoInput').click()">
             📸 SELECCIONAR / TOMAR FOTOS
           </button>
-          <span class="hint-text" style="display:block; margin-top:4px;">Se optimizan y comprimen automáticamente antes de enviar.</span>
+          <span class="hint-text" style="display:block; margin-top:4px;">Se optimizan y comprimen automáticamente antes
+            de enviar.</span>
         </div>
         <div id="photoPreviewGrid" class="photo-preview-grid"></div>
       </div>

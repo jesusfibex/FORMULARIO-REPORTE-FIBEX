@@ -25,10 +25,21 @@ function doPost(e) {
       return ContentService.createTextOutput("Petición ignorada: No es un envío válido del formulario.");
     }
 
+    // Guardar fotos en Google Drive (si hay imágenes)
+    var driveFolderUrl = "";
+    if (data.imagenes && data.imagenes.length > 0) {
+      try {
+        driveFolderUrl = guardarEnGoogleDrive(data);
+        data.drive_url = driveFolderUrl;
+      } catch (eDrive) {
+        Logger.log("Error al guardar en Google Drive: " + eDrive.toString());
+      }
+    }
+
     var texto = buildMessage(data);
     var respuestaTelegram = sendTelegramMessage(texto);
 
-    // Parsear respuesta para obtener ID del mensaje original y enviar fotos asociadas
+    // Parsear respuesta para obtener ID del mensaje original y enviar fotos asociadas a Telegram
     try {
       var jsonResp = JSON.parse(respuestaTelegram);
       if (jsonResp.ok && data.imagenes && data.imagenes.length > 0) {
@@ -135,6 +146,11 @@ function buildMessage(data) {
     gpsText = "\n📍 *Ubicación GPS:* " + escapeMarkdown(data.gps_url);
   }
 
+  var driveText = "";
+  if (data.drive_url) {
+    driveText = "\n📁 *Carpeta Google Drive:* " + escapeMarkdown(data.drive_url);
+  }
+
   var hashtags = buildHashtags(data, tipoTrabajo);
 
   var msg =
@@ -145,7 +161,7 @@ function buildMessage(data) {
     "👷‍♂️ *Cuadrilla:* " + escapeMarkdown(data.cuadrilla || "N/A") + "\n" +
     "📅 *Fecha/Hora:* " + escapeMarkdown(fechaDisplay) + "\n" +
     elementosRedText +
-    "📍 *Zona/Sector:* " + escapeMarkdown(data.zona || "N/A") + gpsText + "\n\n" +
+    "📍 *Zona/Sector:* " + escapeMarkdown(data.zona || "N/A") + gpsText + driveText + "\n\n" +
     "📦 *Material Utilizado / Insumos:*\n" +
     "🪜 *Postes transitados:* " + escapeMarkdown(data.postes || "0") + "\n" +
     "⛓️ *Flejes:* " + escapeMarkdown(data.fleje || "0") + "\n" +
@@ -240,4 +256,44 @@ function sendTelegramPhotos(imagenes, replyId) {
       Logger.log("Error al enviar foto " + i + ": " + e.toString());
     }
   }
+}
+
+function guardarEnGoogleDrive(data) {
+  var nombreCarpetaRaiz = "REPORTES FTTH FIBEX";
+  var parentFolders = DriveApp.getFoldersByName(nombreCarpetaRaiz);
+  var rootFolder;
+
+  if (parentFolders.hasNext()) {
+    rootFolder = parentFolders.next();
+  } else {
+    rootFolder = DriveApp.createFolder(nombreCarpetaRaiz);
+  }
+
+  // TÍTULO DE LA CARPETA SEGÚN REQUERIMIENTO: "ZONA - MH - NAP"
+  var partes = [];
+  if (data.zona) partes.push(data.zona.trim());
+  if (data.mh) partes.push("MH " + data.mh.trim());
+  if (data.nap_nombre) partes.push("NAP " + data.nap_nombre.trim());
+
+  var folderName = partes.length > 0 ? partes.join(" - ") : "REPORTE_SIN_NOMBRE";
+
+  // Si hay fecha, agregar timestamp corto para no sobrescribir carpetas de la misma zona
+  var timestamp = (data.fecha || "").replace(/[^0-9]/g, "").slice(0, 12);
+  if (timestamp) {
+    folderName += " (" + timestamp + ")";
+  }
+
+  var subFolder = rootFolder.createFolder(folderName);
+
+  for (var i = 0; i < data.imagenes.length; i++) {
+    var imgObj = data.imagenes[i];
+    var blob = Utilities.newBlob(
+      Utilities.base64Decode(imgObj.base64),
+      imgObj.mimeType || "image/jpeg",
+      imgObj.name || ("foto_" + (i + 1) + ".jpg")
+    );
+    subFolder.createFile(blob);
+  }
+
+  return subFolder.getUrl();
 }
