@@ -1,29 +1,29 @@
-// ============================================================
-//  REPORTE FTTH - OBI GROUP (Backend Google Apps Script)
-// ============================================================
-
-// Permite obtener BOT_TOKEN desde Script Properties para mayor seguridad en Apps Script
 var BOT_TOKEN = PropertiesService.getScriptProperties().getProperty("BOT_TOKEN") || "8832826558:AAG4dReMmGKxCq6WSGWCvReyM9Dzleq8WtU";
 var CHAT_ID = "-1004385586958";
 var TOPIC_ID = 3;
 var DRIVE_FOLDER_ID = "17jT5nBfdPUEsJoNQ3scYY9KqUTx6MTtg";
 
 function doGet(e) {
-  return ContentService.createTextOutput("Servidor FTTH OBI GROUP activo.");
+  return ContentService.createTextOutput(JSON.stringify({ status: "activo", message: "Servidor FTTH OBI GROUP activo." }))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function doPost(e) {
   try {
     if (!e || !e.postData || !e.postData.contents) {
-      return ContentService.createTextOutput("Sin datos");
+      return createJsonResponse({ success: false, error: "Sin datos recibidos." });
     }
 
-    var data = JSON.parse(e.postData.contents);
+    var data;
+    try {
+      data = JSON.parse(e.postData.contents);
+    } catch (parseErr) {
+      return createJsonResponse({ success: false, error: "JSON inválido." });
+    }
 
-    // FILTRO DE SEGURIDAD:
-    // Se valida 'cuadrilla' y 'tipo_trabajo' que existen en el envío del HTML.
+    // FILTRO DE SEGURIDAD: validar que sea un envío del formulario real
     if (data.update_id || data.message || !data.cuadrilla || !data.tipo_trabajo) {
-      return ContentService.createTextOutput("Petición ignorada: No es un envío válido del formulario.");
+      return createJsonResponse({ success: false, error: "Petición ignorada: no es un envío válido del formulario." });
     }
 
     // Guardar fotos en Google Drive (si hay imágenes)
@@ -40,7 +40,6 @@ function doPost(e) {
     var texto = buildMessage(data);
     var respuestaTelegram = sendTelegramMessage(texto);
 
-    // Parsear respuesta para obtener ID del mensaje original y enviar fotos asociadas a Telegram
     try {
       var jsonResp = JSON.parse(respuestaTelegram);
       if (jsonResp.ok && data.imagenes && data.imagenes.length > 0) {
@@ -51,12 +50,17 @@ function doPost(e) {
       Logger.log("Error enviando imágenes: " + eFoto.toString());
     }
 
-    return ContentService.createTextOutput("OK: " + respuestaTelegram);
+    return createJsonResponse({ success: true, telegramResponse: JSON.parse(respuestaTelegram), driveUrl: driveFolderUrl });
 
   } catch (err) {
     Logger.log("Error en doPost: " + err.toString());
-    return ContentService.createTextOutput("Error interno: " + err.toString());
+    return createJsonResponse({ success: false, error: err.toString() });
   }
+}
+
+function createJsonResponse(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function sanitizarTag(str) {
@@ -223,9 +227,7 @@ function sendTelegramMessage(texto) {
   };
 
   var response = UrlFetchApp.fetch(url, options);
-  var responseText = response.getContentText();
-  Logger.log("Respuesta de Telegram: " + responseText);
-  return responseText;
+  return response.getContentText();
 }
 
 function sendTelegramPhotos(imagenes, replyId) {
@@ -270,7 +272,6 @@ function guardarEnGoogleDrive(data) {
     Logger.log("Error buscando carpeta por ID: " + errDrive.toString());
   }
 
-  // Fallback a buscar o crear carpeta por nombre si falla el ID
   if (!rootFolder) {
     var nombreCarpetaRaiz = "REPORTES FTTH FIBEX";
     var parentFolders = DriveApp.getFoldersByName(nombreCarpetaRaiz);
@@ -281,7 +282,6 @@ function guardarEnGoogleDrive(data) {
     }
   }
 
-  // TÍTULO DE LA CARPETA SEGÚN REQUERIMIENTO: "ZONA - MH - NAP"
   var partes = [];
   if (data.zona) partes.push(data.zona.trim());
   if (data.mh) partes.push("MH " + data.mh.trim());
@@ -289,7 +289,6 @@ function guardarEnGoogleDrive(data) {
 
   var folderName = partes.length > 0 ? partes.join(" - ") : "REPORTE_SIN_NOMBRE";
 
-  // Si hay fecha, agregar timestamp corto para no sobrescribir carpetas de la misma zona
   var timestamp = (data.fecha || "").replace(/[^0-9]/g, "").slice(0, 12);
   if (timestamp) {
     folderName += " (" + timestamp + ")";
