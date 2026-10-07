@@ -11,7 +11,6 @@ function doGet(e) {
 function doPost(e) {
   try {
     if (!e || !e.postData || !e.postData.contents) {
-      sendTelegramMessage("⚠️ *DEBUG:* Apps Script recibió una petición vacía.");
       return createJsonResponse({ success: false, error: "Sin datos recibidos." });
     }
 
@@ -19,35 +18,40 @@ function doPost(e) {
     try {
       data = JSON.parse(e.postData.contents);
     } catch (parseErr) {
-      sendTelegramMessage("⚠️ *DEBUG:* Error al hacer JSON.parse en Apps Script.");
       return createJsonResponse({ success: false, error: "JSON inválido." });
     }
 
-    sendTelegramMessage("📡 *DEBUG:* Datos recibidos en Apps Script. Imágenes a procesar: " + (data.imagenes ? data.imagenes.length : 0));
-
-    // Guardar fotos en Google Drive en background (el navegador envía las fotos a Telegram directamente)
+    // Guardar fotos en Google Drive (si hay imágenes)
     var driveFolderUrl = "";
     if (data.imagenes && data.imagenes.length > 0) {
       try {
         driveFolderUrl = guardarEnGoogleDrive(data);
         data.drive_url = driveFolderUrl;
-        sendTelegramMessage("✅ *DEBUG:* Carpeta de Drive creada con éxito: " + driveFolderUrl);
       } catch (eDrive) {
-        sendTelegramMessage("❌ *DEBUG:* Error CRÍTICO en guardarEnGoogleDrive: " + eDrive.toString());
+        Logger.log("Error al guardar en Google Drive: " + eDrive.toString());
       }
     }
 
-    // Enviar solo el texto del reporte a Telegram
-    sendTelegramMessage(buildMessage(data));
+    var texto = buildMessage(data);
+    var respuestaTelegram = sendTelegramMessage(texto);
 
-    return createJsonResponse({ success: true, driveUrl: driveFolderUrl });
+    try {
+      var jsonResp = JSON.parse(respuestaTelegram);
+      if (jsonResp.ok && data.imagenes && data.imagenes.length > 0) {
+        var replyId = jsonResp.result.message_id;
+        sendTelegramPhotos(data.imagenes, replyId);
+      }
+    } catch (eFoto) {
+      Logger.log("Error enviando imágenes: " + eFoto.toString());
+    }
+
+    return createJsonResponse({ success: true, telegramResponse: JSON.parse(respuestaTelegram), driveUrl: driveFolderUrl });
 
   } catch (err) {
-    sendTelegramMessage("❌ *DEBUG:* Error General en doPost: " + err.toString());
+    Logger.log("Error en doPost: " + err.toString());
     return createJsonResponse({ success: false, error: err.toString() });
   }
 }
-
 
 function createJsonResponse(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
@@ -139,12 +143,14 @@ function buildMessage(data) {
 
   var gpsText = "";
   if (data.gps_url) {
-    gpsText = "\n📍 *Ubicación GPS:* " + escapeMarkdown(data.gps_url);
+    var safeGpsUrl = String(data.gps_url).replace(/\\/g, "\\\\").replace(/\)/g, "\\)");
+    gpsText = "\n📍 *Ubicación GPS:* [Ver en Google Maps](" + safeGpsUrl + ")";
   }
 
   var driveText = "";
   if (data.drive_url) {
-    driveText = "\n📁 *Carpeta Google Drive:* " + escapeMarkdown(data.drive_url);
+    var safeDriveUrl = String(data.drive_url).replace(/\\/g, "\\\\").replace(/\)/g, "\\)");
+    driveText = "\n📁 *Carpeta Google Drive:* [Abrir en Drive](" + safeDriveUrl + ")";
   }
 
   var hashtags = buildHashtags(data, tipoTrabajo);
@@ -227,6 +233,7 @@ function sendTelegramPhotos(imagenes, replyId) {
   for (var i = 0; i < imagenes.length; i++) {
     try {
       var imgData = imagenes[i];
+      if (!imgData || !imgData.base64) continue;
       var blob = Utilities.newBlob(Utilities.base64Decode(imgData.base64), imgData.mimeType || "image/jpeg", imgData.name || ("foto_" + (i + 1) + ".jpg"));
 
       var payload = {
@@ -253,6 +260,9 @@ function sendTelegramPhotos(imagenes, replyId) {
 }
 
 function guardarEnGoogleDrive(data) {
+  if (!data) data = {};
+  if (!data.imagenes) data.imagenes = [];
+
   var rootFolder;
 
   try {
@@ -274,11 +284,11 @@ function guardarEnGoogleDrive(data) {
   }
 
   var partes = [];
-  if (data.zona) partes.push(data.zona.trim());
-  if (data.mh) partes.push("MH " + data.mh.trim());
-  if (data.nap_nombre) partes.push("NAP " + data.nap_nombre.trim());
+  if (data.zona && data.zona.trim() !== "") partes.push(data.zona.trim());
+  if (data.mh && data.mh.trim() !== "") partes.push("MH " + data.mh.trim());
+  if (data.nap_nombre && data.nap_nombre.trim() !== "") partes.push("NAP " + data.nap_nombre.trim());
 
-  var folderName = partes.length > 0 ? partes.join(" - ") : "REPORTE_SIN_NOMBRE";
+  var folderName = partes.length > 0 ? partes.join(" - ") : "REPORTE";
 
   var timestamp = (data.fecha || "").replace(/[^0-9]/g, "").slice(0, 12);
   if (timestamp) {
@@ -288,14 +298,42 @@ function guardarEnGoogleDrive(data) {
   var subFolder = rootFolder.createFolder(folderName);
 
   for (var i = 0; i < data.imagenes.length; i++) {
-    var imgObj = data.imagenes[i];
-    var blob = Utilities.newBlob(
-      Utilities.base64Decode(imgObj.base64),
-      imgObj.mimeType || "image/jpeg",
-      imgObj.name || ("foto_" + (i + 1) + ".jpg")
-    );
-    subFolder.createFile(blob);
+    try {
+      var imgObj = data.imagenes[i];
+      if (!imgObj || !imgObj.base64) continue;
+      var blob = Utilities.newBlob(
+        Utilities.base64Decode(imgObj.base64),
+        imgObj.mimeType || "image/jpeg",
+        imgObj.name || ("foto_" + (i + 1) + ".jpg")
+      );
+      subFolder.createFile(blob);
+    } catch (errFoto) {
+      Logger.log("Error guardando foto " + i + ": " + errFoto.toString());
+    }
   }
 
-  return subFolder.getUrl();
+  return subFolder ? subFolder.getUrl() : rootFolder.getUrl();
+}
+
+// Función de prueba ejecutable directamente en el editor de Google Apps Script
+function probarDrive() {
+  var testData = {
+    sede: "FIBEX",
+    cuadrilla: "C-PRUEBA",
+    fecha: "2026-10-07 10:00",
+    tipo_trabajo: "INSTALACION NAP",
+    zona: "ZONA PRUEBA",
+    mh: "MH-01",
+    nap_nombre: "NAP-01",
+    imagenes: [
+      {
+        name: "test_pixel.jpg",
+        mimeType: "image/jpeg",
+        base64: "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA="
+      }
+    ]
+  };
+  var url = guardarEnGoogleDrive(testData);
+  Logger.log("✅ Carpeta de prueba creada exitosamente en Google Drive: " + url);
+  return url;
 }

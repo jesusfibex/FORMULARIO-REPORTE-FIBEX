@@ -14,6 +14,7 @@
 
   <div class="container">
     <div class="header">
+      <img src="fibex-logo.png" alt="Fibex Telecom" class="brand-logo" onerror="this.style.display='none'">
       <h2>📊 Reporte FTTH OBI GROUP</h2>
       <p>Sistema de Registro y Envío de Labores Técnicas</p>
     </div>
@@ -53,7 +54,7 @@
 
       <!-- Badge indicador dinámico -->
       <div class="tipo-badge-container">
-        <span id="tipoBadge" class="tipo-badge badge-otro">🏷️ #REPORTE</span>
+        <span id="tipoBadge" class="tipo-badge badge-otro">📋 #REPORTE</span>
       </div>
 
       <!-- Campo Condicional para Otro Trabajo -->
@@ -176,11 +177,9 @@
       <div class="card-section photo-card">
         <p class="section-title">📷 Evidencia Fotográfica (Máx. 5 fotos)</p>
         <div class="photo-upload-container">
-          <!-- Permitirá elegir Galería, Archivos o Cámara en dispositivos móviles -->
-          <button type="button" class="btn-photo" onclick="document.getElementById('fileInput').click()">📂 Seleccionar
-            o Tomar Fotos</button>
-          <input type="file" id="fileInput" accept="image/*" multiple style="display: none;"
-            onchange="handleFileSelect(event)">
+          <!-- Permite elegir Galería, Archivos o Cámara en dispositivos móviles -->
+          <button type="button" class="btn-photo" onclick="document.getElementById('fileInput').click()">📂 Seleccionar o Tomar Fotos</button>
+          <input type="file" id="fileInput" accept="image/jpeg, image/png, image/jpg" multiple style="display: none;" onchange="handleFileSelect(event)">
         </div>
         <div class="photo-preview-grid" id="previewContainer"></div>
       </div>
@@ -198,8 +197,7 @@
       <div class="search-tips">
         <span>💡</span>
         <div>
-          <strong>Filtros rápidos en Telegram:</strong> Usa los hashtags generados al final del reporte para ubicar
-          registros de forma inmediata mediante <code>#REPORTE</code>, códigos de NAP o cuadrillas.
+          <strong>Filtros rápidos en Telegram:</strong> Usa los hashtags generados al final del reporte para ubicar registros de forma inmediata mediante <code>#REPORTE</code>, códigos de NAP o cuadrillas.
         </div>
       </div>
 
@@ -211,21 +209,25 @@
   </div>
 
   <script>
-    // ⚠️ CAMBIA ESTA URL POR TU URL DE GOOGLE APPS SCRIPT WEB APP
+    // ⚠️ URL de Google Apps Script Web App
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyZr32Rwdn5f-ePOeNHOJKlDaGinxD1KEVFGlzj8FcC_lrq2KK6dbD1ttjgQBxfVjblEQ/exec";
 
-    let imagenesBase64 = [];
+    let fotosLista = [];
 
-    window.addEventListener('DOMContentLoaded', () => {
+    function setFechaActual() {
       const now = new Date();
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
       document.getElementById('fecha').value = now.toISOString().slice(0, 16);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      setFechaActual();
 
       if (window.Telegram && window.Telegram.WebApp) {
         window.Telegram.WebApp.expand();
       }
 
-      actualizarPreviewTexto();
+      actualizarBadgeYCampos();
 
       document.querySelectorAll('#ftthForm input, #ftthForm select, #ftthForm textarea').forEach(el => {
         el.addEventListener('input', actualizarPreviewTexto);
@@ -305,43 +307,91 @@
       );
     }
 
-    function handleFileSelect(event) {
-      const files = event.target.files;
-      const previewContainer = document.getElementById("previewContainer");
+    // Comprime automáticamente las fotos usando Canvas para evitar superar el límite de payload
+    function comprimirImagen(file, maxDimension = 1280, quality = 0.75) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("Error leyendo archivo: " + file.name));
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onerror = () => reject(new Error("Error cargando imagen: " + file.name));
+          img.onload = () => {
+            let width = img.width;
+            let height = img.height;
 
-      if (imagenesBase64.length + files.length > 5) {
-        alert("Puedes adjuntar un máximo de 5 fotos.");
+            if (width > maxDimension || height > maxDimension) {
+              if (width > height) {
+                height = Math.round((height * maxDimension) / width);
+                width = maxDimension;
+              } else {
+                width = Math.round((width * maxDimension) / height);
+                height = maxDimension;
+              }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const dataUrl = canvas.toDataURL('image/jpeg', quality);
+            const base64 = dataUrl.split(',')[1];
+            resolve({
+              id: 'foto_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+              name: (file.name || "foto").replace(/\.[^/.]+$/, "") + ".jpg",
+              mimeType: "image/jpeg",
+              base64: base64,
+              previewUrl: dataUrl
+            });
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleFileSelect(event) {
+      const files = Array.from(event.target.files || []);
+      event.target.value = ''; // Permite seleccionar nuevamente el mismo archivo si se desea
+
+      if (files.length === 0) return;
+
+      if (fotosLista.length + files.length > 5) {
+        alert("Puedes adjuntar un máximo de 5 fotos en total.");
         return;
       }
 
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const reader = new FileReader();
-
-        reader.onload = function (e) {
-          const base64String = e.target.result.split(',')[1];
-
-          imagenesBase64.push({
-            name: file.name,
-            mimeType: file.type,
-            base64: base64String
-          });
-
-          const thumbDiv = document.createElement('div');
-          thumbDiv.className = 'photo-preview-item';
-          thumbDiv.innerHTML = `
-                        <img src="${e.target.result}" alt="Preview">
-                        <button type="button" class="btn-remove-photo" onclick="removeImage(${imagenesBase64.length - 1}, this)">X</button>
-                    `;
-          previewContainer.appendChild(thumbDiv);
-        };
-        reader.readAsDataURL(file);
+      for (const file of files) {
+        try {
+          const fotoComp = await comprimirImagen(file);
+          fotosLista.push(fotoComp);
+        } catch (err) {
+          console.error("Error al procesar foto:", err);
+        }
       }
+
+      renderizarPreviews();
     }
 
-    function removeImage(index, element) {
-      imagenesBase64.splice(index, 1);
-      element.parentElement.remove();
+    function renderizarPreviews() {
+      const container = document.getElementById("previewContainer");
+      container.innerHTML = "";
+
+      fotosLista.forEach(foto => {
+        const thumbDiv = document.createElement('div');
+        thumbDiv.className = 'photo-preview-item';
+        thumbDiv.innerHTML = `
+          <img src="${foto.previewUrl}" alt="Preview">
+          <button type="button" class="btn-remove-photo" onclick="eliminarFoto('${foto.id}')" title="Eliminar foto">✕</button>
+        `;
+        container.appendChild(thumbDiv);
+      });
+    }
+
+    function eliminarFoto(id) {
+      fotosLista = fotosLista.filter(f => f.id !== id);
+      renderizarPreviews();
     }
 
     function sanitizarTag(str) {
@@ -428,15 +478,33 @@ Responda a este mensaje con las fotos de la instalación.`;
     function copiarTextoPreview() {
       const textarea = document.getElementById("reporteOutput");
       textarea.select();
-      navigator.clipboard.writeText(textarea.value).then(() => {
-        const btn = document.getElementById("btnCopy");
+      textarea.setSelectionRange(0, 99999);
+      const btn = document.getElementById("btnCopy");
+
+      const marcarCopiado = () => {
         btn.textContent = "¡Copiado!";
         btn.classList.add("copied");
         setTimeout(() => {
           btn.textContent = "Copiar";
           btn.classList.remove("copied");
         }, 2000);
-      });
+      };
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textarea.value)
+          .then(marcarCopiado)
+          .catch(() => {
+            try {
+              document.execCommand("copy");
+              marcarCopiado();
+            } catch (e) { }
+          });
+      } else {
+        try {
+          document.execCommand("copy");
+          marcarCopiado();
+        } catch (e) { }
+      }
     }
 
     document.getElementById("ftthForm").addEventListener("submit", function (e) {
@@ -471,7 +539,11 @@ Responda a este mensaje con las fotos de la instalación.`;
         preformados_bigote: document.getElementById("preformados_bigote").value,
         potencia: document.getElementById("potencia").value,
         nota: (document.getElementById("nota").value || "").toUpperCase(),
-        imagenes: imagenesBase64
+        imagenes: fotosLista.map(f => ({
+          name: f.name,
+          mimeType: f.mimeType,
+          base64: f.base64
+        }))
       };
 
       fetch(SCRIPT_URL, {
@@ -483,16 +555,15 @@ Responda a este mensaje con las fotos de la instalación.`;
         body: JSON.stringify(payload)
       })
         .then(() => {
-          // Como usamos no-cors para evitar errores de Google, no podemos leer la respuesta JSON,
-          // así que asumimos éxito si la petición de red no falló.
           status.className = "status-msg status-success";
-          status.textContent = "¡REPORTE ENVIADO A GOOGLE DRIVE Y TELEGRAM!";
+          status.textContent = "✅ ¡REPORTE ENVIADO A GOOGLE DRIVE Y TELEGRAM!";
           status.style.display = "block";
 
           document.getElementById("ftthForm").reset();
-          imagenesBase64 = [];
-          document.getElementById("previewContainer").innerHTML = "";
+          fotosLista = [];
+          renderizarPreviews();
           document.getElementById("gpsStatus").textContent = "Sin ubicación capturada";
+          setFechaActual();
           actualizarBadgeYCampos();
 
           if (window.Telegram && window.Telegram.WebApp) {
@@ -503,7 +574,7 @@ Responda a este mensaje con las fotos de la instalación.`;
         })
         .catch((err) => {
           status.className = "status-msg status-error";
-          status.textContent = "ERROR de red: " + err.message;
+          status.textContent = "❌ ERROR de red: " + err.message;
           status.style.display = "block";
         })
         .finally(() => {

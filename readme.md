@@ -47,9 +47,9 @@ El sistema clasifica automáticamente cada reporte y añade hashtags y encabezad
 
 1. Ve a https://script.google.com
 2. Abre tu proyecto de Apps Script existente o crea uno nuevo
-3. Copia el contenido de [js.js](file:///d:/Users/jesus/Documents/proyectos/FORMULARIO-REPORTE-FIBEX/js.js) y pégalo
-4. Verifica el valor de `TOPIC_ID`
-5. Guarda el proyecto y haz clic en **Implementar > Administrar implementaciones > Editar > Nueva versión > Implementar**
+3. Copia el contenido de [js.js](file:///c:/Users/jpichardo/Desktop/FORMULARIO-REPORTE-FIBEX/FORMULARIO-REPORTE-FIBEX/js.js) y pégalo en el editor de Apps Script
+4. (Opcional) Puedes seleccionar la función `probarDrive` en el desplegable superior y presionar **Ejecutar** para validar los permisos y verificar que cree la carpeta en tu Google Drive.
+5. Haz clic en **Implementar > Administrar implementaciones > Editar > Nueva versión > Implementar**
 
 ---
 
