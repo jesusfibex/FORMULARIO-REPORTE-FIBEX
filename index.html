@@ -177,9 +177,10 @@
       <div class="card-section photo-card">
         <p class="section-title">📷 Evidencia Fotográfica (Máx. 5 fotos)</p>
         <div class="photo-upload-container">
-          <!-- Permite elegir Galería, Archivos o Cámara en dispositivos móviles -->
-          <button type="button" class="btn-photo" onclick="document.getElementById('fileInput').click()">📂 Seleccionar o Tomar Fotos</button>
-          <input type="file" id="fileInput" accept="image/jpeg, image/png, image/jpg" multiple style="display: none;" onchange="handleFileSelect(event)">
+          <!-- Se removieron atributos restrictivos para permitir elegir galería, archivos o cámara en móviles -->
+          <button type="button" class="btn-photo" onclick="document.getElementById('fileInput').click()">📂 Seleccionar
+            o Tomar Fotos</button>
+          <input type="file" id="fileInput" multiple style="display: none;" onchange="handleFileSelect(event)">
         </div>
         <div class="photo-preview-grid" id="previewContainer"></div>
       </div>
@@ -197,7 +198,8 @@
       <div class="search-tips">
         <span>💡</span>
         <div>
-          <strong>Filtros rápidos en Telegram:</strong> Usa los hashtags generados al final del reporte para ubicar registros de forma inmediata mediante <code>#REPORTE</code>, códigos de NAP o cuadrillas.
+          <strong>Filtros rápidos en Telegram:</strong> Usa los hashtags generados al final del reporte para ubicar
+          registros de forma inmediata mediante <code>#REPORTE</code>, códigos de NAP o cuadrillas.
         </div>
       </div>
 
@@ -314,7 +316,7 @@
         reader.onerror = () => reject(new Error("Error leyendo archivo: " + file.name));
         reader.onload = (e) => {
           const img = new Image();
-          img.onerror = () => reject(new Error("Error cargando imagen: " + file.name));
+          img.onerror = () => reject(new Error("El archivo seleccionado no es una imagen válida: " + file.name));
           img.onload = () => {
             let width = img.width;
             let height = img.height;
@@ -367,7 +369,7 @@
           const fotoComp = await comprimirImagen(file);
           fotosLista.push(fotoComp);
         } catch (err) {
-          console.error("Error al procesar foto:", err);
+          alert(err.message);
         }
       }
 
