@@ -7,7 +7,7 @@
   <title>Reporte FTTH - OBI GROUP / FIBEX</title>
   <!-- SDK de Telegram WebApp -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="style.css"> <!-- O pega tu CSS directamente en una etiqueta <style> si prefieres -->
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -176,6 +176,7 @@
       <div class="card-section photo-card">
         <p class="section-title">📷 Evidencia Fotográfica (Máx. 5 fotos)</p>
         <div class="photo-upload-container">
+          <!-- Permitirá elegir Galería, Archivos o Cámara en dispositivos móviles -->
           <button type="button" class="btn-photo" onclick="document.getElementById('fileInput').click()">📂 Seleccionar
             o Tomar Fotos</button>
           <input type="file" id="fileInput" accept="image/*" multiple style="display: none;"
@@ -210,11 +211,8 @@
   </div>
 
   <script>
+    // ⚠️ CAMBIA ESTA URL POR TU URL DE GOOGLE APPS SCRIPT WEB APP
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyZr32Rwdn5f-ePOeNHOJKlDaGinxD1KEVFGlzj8FcC_lrq2KK6dbD1ttjgQBxfVjblEQ/exec";
-    // Credenciales del bot para envío directo de fotos a Telegram desde el navegador
-    const BOT_TOKEN = "8832826558:AAG4dReMmGKxCq6WSGWCvReyM9Dzleq8WtU";
-    const CHAT_ID = "-1004385586958";
-    const TOPIC_ID = 3;
 
     let imagenesBase64 = [];
 
@@ -229,7 +227,6 @@
 
       actualizarPreviewTexto();
 
-      // Agregar eventos para actualizar la vista previa en tiempo real
       document.querySelectorAll('#ftthForm input, #ftthForm select, #ftthForm textarea').forEach(el => {
         el.addEventListener('input', actualizarPreviewTexto);
         el.addEventListener('change', actualizarPreviewTexto);
@@ -250,7 +247,6 @@
         document.getElementById("otro_trabajo_detalle").value = "";
       }
 
-      // Cambiar estilos y texto del Badge según selección
       badge.className = "tipo-badge";
       if (tipo.includes("NAP")) {
         badge.classList.add("badge-nap");
@@ -379,7 +375,6 @@
       const potencia = document.getElementById("potencia").value;
       const nota = (document.getElementById("nota").value || "SIN OBSERVACIONES").toUpperCase();
 
-      // Construir hashtags dinámicos
       let tags = ["#REPORTE"];
       if (tipo.includes("NAP")) tags.push("#NAP", "#CAJA_NAP");
       else if (tipo.includes("MANGA") || tipo.includes("HUB")) tags.push("#MANGA_HUB", "#MANGA");
@@ -444,35 +439,14 @@ Responda a este mensaje con las fotos de la instalación.`;
       });
     }
 
-    // Convierte base64 a Blob para envío directo a Telegram
-    function base64ToBlob(b64, mimeType) {
-      const bytes = atob(b64);
-      const arr = new Uint8Array(bytes.length);
-      for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
-      return new Blob([arr], { type: mimeType || "image/jpeg" });
-    }
-
-    // Envía una foto directamente a la API de Telegram desde el navegador
-    async function enviarFotoTelegram(imgObj) {
-      const blob = base64ToBlob(imgObj.base64, imgObj.mimeType);
-      const formData = new FormData();
-      formData.append("chat_id", CHAT_ID);
-      formData.append("message_thread_id", String(TOPIC_ID));
-      formData.append("photo", blob, imgObj.name || "foto.jpg");
-      const resp = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
-        method: "POST",
-        body: formData
-      });
-      return resp.json();
-    }
-
-    document.getElementById("ftthForm").addEventListener("submit", async function (e) {
+    document.getElementById("ftthForm").addEventListener("submit", function (e) {
       e.preventDefault();
 
       const btn = document.getElementById("btnSubmit");
       const status = document.getElementById("statusMsg");
 
       btn.disabled = true;
+      btn.textContent = "⏳ ENVIANDO REPORTE Y FOTOS...";
       status.style.display = "none";
 
       const tipoTrabajoVal = document.getElementById("tipo_trabajo").value.toUpperCase();
@@ -497,55 +471,45 @@ Responda a este mensaje con las fotos de la instalación.`;
         preformados_bigote: document.getElementById("preformados_bigote").value,
         potencia: document.getElementById("potencia").value,
         nota: (document.getElementById("nota").value || "").toUpperCase(),
-        imagenes: imagenesBase64  // Apps Script usa esto para guardar en Google Drive
+        imagenes: imagenesBase64
       };
 
-      try {
-        // PASO 1: Enviar texto del reporte a Apps Script (fire & forget: maneja Telegram texto + Google Drive)
-        btn.textContent = "⏳ Enviando reporte...";
-        fetch(SCRIPT_URL, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(payload)
-        });
-        // No esperamos respuesta (no-cors): Apps Script procesa en background
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: JSON.stringify(payload)
+      })
+        .then(() => {
+          // Como usamos no-cors para evitar errores de Google, no podemos leer la respuesta JSON,
+          // así que asumimos éxito si la petición de red no falló.
+          status.className = "status-msg status-success";
+          status.textContent = "¡REPORTE ENVIADO A GOOGLE DRIVE Y TELEGRAM!";
+          status.style.display = "block";
 
-        // PASO 2: Enviar fotos directamente a Telegram desde el navegador
-        if (imagenesBase64.length > 0) {
-          btn.textContent = `⏳ Enviando ${imagenesBase64.length} foto(s) a Telegram...`;
-          for (let i = 0; i < imagenesBase64.length; i++) {
-            btn.textContent = `⏳ Foto ${i + 1} de ${imagenesBase64.length}...`;
-            await enviarFotoTelegram(imagenesBase64[i]);
+          document.getElementById("ftthForm").reset();
+          imagenesBase64 = [];
+          document.getElementById("previewContainer").innerHTML = "";
+          document.getElementById("gpsStatus").textContent = "Sin ubicación capturada";
+          actualizarBadgeYCampos();
+
+          if (window.Telegram && window.Telegram.WebApp) {
+            setTimeout(() => {
+              window.Telegram.WebApp.close();
+            }, 2500);
           }
-        }
-
-        // PASO 3: Mostrar éxito
-        status.className = "status-msg status-success";
-        status.textContent = imagenesBase64.length > 0
-          ? `✅ ¡Reporte enviado! ${imagenesBase64.length} foto(s) publicadas en Telegram. Las fotos también se guardan en Drive.`
-          : "✅ ¡Reporte enviado exitosamente a Telegram!";
-        status.style.display = "block";
-
-        // Limpiar formulario
-        document.getElementById("ftthForm").reset();
-        imagenesBase64 = [];
-        document.getElementById("previewContainer").innerHTML = "";
-        document.getElementById("gpsStatus").textContent = "Sin ubicación capturada";
-        actualizarBadgeYCampos();
-
-        if (window.Telegram && window.Telegram.WebApp) {
-          setTimeout(() => window.Telegram.WebApp.close(), 2500);
-        }
-
-      } catch (err) {
-        status.className = "status-msg status-error";
-        status.textContent = "ERROR al enviar fotos: " + err.message;
-        status.style.display = "block";
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "🚀 ENVIAR REPORTE";
-      }
+        })
+        .catch((err) => {
+          status.className = "status-msg status-error";
+          status.textContent = "ERROR de red: " + err.message;
+          status.style.display = "block";
+        })
+        .finally(() => {
+          btn.disabled = false;
+          btn.textContent = "🚀 ENVIAR REPORTE";
+        });
     });
   </script>
 </body>

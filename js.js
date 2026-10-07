@@ -11,6 +11,7 @@ function doGet(e) {
 function doPost(e) {
   try {
     if (!e || !e.postData || !e.postData.contents) {
+      sendTelegramMessage("⚠️ *DEBUG:* Apps Script recibió una petición vacía.");
       return createJsonResponse({ success: false, error: "Sin datos recibidos." });
     }
 
@@ -18,8 +19,11 @@ function doPost(e) {
     try {
       data = JSON.parse(e.postData.contents);
     } catch (parseErr) {
+      sendTelegramMessage("⚠️ *DEBUG:* Error al hacer JSON.parse en Apps Script.");
       return createJsonResponse({ success: false, error: "JSON inválido." });
     }
+
+    sendTelegramMessage("📡 *DEBUG:* Datos recibidos en Apps Script. Imágenes a procesar: " + (data.imagenes ? data.imagenes.length : 0));
 
     // Guardar fotos en Google Drive en background (el navegador envía las fotos a Telegram directamente)
     var driveFolderUrl = "";
@@ -27,8 +31,9 @@ function doPost(e) {
       try {
         driveFolderUrl = guardarEnGoogleDrive(data);
         data.drive_url = driveFolderUrl;
+        sendTelegramMessage("✅ *DEBUG:* Carpeta de Drive creada con éxito: " + driveFolderUrl);
       } catch (eDrive) {
-        Logger.log("Error al guardar en Google Drive: " + eDrive.toString());
+        sendTelegramMessage("❌ *DEBUG:* Error CRÍTICO en guardarEnGoogleDrive: " + eDrive.toString());
       }
     }
 
@@ -38,7 +43,7 @@ function doPost(e) {
     return createJsonResponse({ success: true, driveUrl: driveFolderUrl });
 
   } catch (err) {
-    Logger.log("Error en doPost: " + err.toString());
+    sendTelegramMessage("❌ *DEBUG:* Error General en doPost: " + err.toString());
     return createJsonResponse({ success: false, error: err.toString() });
   }
 }
